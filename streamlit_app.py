@@ -1,6 +1,7 @@
 import requests
 import streamlit as st
 import validators
+from urllib.parse import urlparse, urljoin
 from bs4 import BeautifulSoup
 
 # Function to extract URLs from a webpage
@@ -13,7 +14,23 @@ def extract_urls(webpage_url):
         return []
     
     soup = BeautifulSoup(response.text, 'html.parser')
-    urls = [a['href'] for a in soup.find_all('a', href=True)]
+    urls = []
+
+    for a in soup.find_all('a', href=True):
+        href = a['href']
+        
+        # Mengabaikan URL mailto atau URL fragment (yang hanya '#')
+        if href.startswith('mailto:') or href.startswith('#'):
+            continue
+        
+        # Menambahkan skema dan domain jika URL relatif
+        if not href.startswith('http') and not href.startswith('www'):
+            href = urljoin(webpage_url, href)
+
+        # Memastikan URL valid
+        if validators.url(href):
+            urls.append(href)
+    
     return urls
 
 # Function to summarize an article using Gemini API
@@ -59,7 +76,7 @@ gemini_api_key = st.text_input('Enter your Gemini API key:', type='password')
 if webpage_url and not validators.url(webpage_url):
     st.error("The entered URL is not valid.")
 
-if st.button('Tampilkan Ringkasan'):
+if st.button(Ringkasan'):
     if webpage_url and gemini_api_key:
         urls = extract_urls(webpage_url)
         if urls:  # Jika ada URL yang diekstrak
@@ -70,6 +87,6 @@ if st.button('Tampilkan Ringkasan'):
                 else:
                     st.error(f"Failed to summarize article at {url}")
         else:
-            st.error('No URLs found in the provided webpage.')
+            st.error('No valid URLs found in the provided webpage.')
     else:
         st.error('Please enter both the webpage URL and Gemini API key.')
