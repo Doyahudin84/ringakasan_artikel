@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 # Function to extract URLs from a webpage
 def extract_urls(webpage_url):
     try:
-        response = requests.get(webpage_url)
+        response = requests.get(webpage_url, verify=False)
         response.raise_for_status()  # Memastikan response tidak error (status code bukan 200)
     except requests.exceptions.RequestException as e:
         st.error(f"An error occurred while fetching the webpage: {e}")
