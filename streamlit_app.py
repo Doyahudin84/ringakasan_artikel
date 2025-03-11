@@ -6,9 +6,10 @@ from bs4 import BeautifulSoup
 
 # Function to extract URLs from a webpage
 def validate_url(webpage_url):
-    """ Memastikan URL memiliki skema yang benar (https://) """
+    """ Memastikan URL memiliki skema yang benar (http:// atau https://) """
     parsed_url = urlparse(webpage_url)
     if not parsed_url.scheme:  # Jika tidak ada skema (http/https)
+        print(f"URL tidak memiliki skema. Menambahkan skema https:// ke URL.")
         return f"https://{webpage_url}"  # Menambahkan https:// secara otomatis
     return webpage_url
 
@@ -16,6 +17,7 @@ def extract_urls(webpage_url):
     try:
         # Memastikan URL valid dan lengkap
         webpage_url = validate_url(webpage_url)
+        print(f"Mengambil halaman dari URL: {webpage_url}")
         
         # Mengambil konten halaman
         response = requests.get(webpage_url)
@@ -27,16 +29,17 @@ def extract_urls(webpage_url):
         # Mencari artikel di dalam tag <article>
         article = soup.find('article')
         if article:
+            # Mengambil seluruh teks dari paragraf dan menggabungkannya
             paragraphs = [p.get_text() for p in article.find_all('p')]
-            return [p.strip() for p in paragraphs if p.strip()]
+            combined_paragraph = ' '.join([p.strip() for p in paragraphs if p.strip()])  # Menggabungkan semua paragraf
+            return combined_paragraph
         else:
             print("Tidak ditemukan tag <article> pada halaman.")
-            return []
+            return ""
 
     except requests.exceptions.RequestException as e:
         print(f"Error saat mengambil halaman: {e}")
-        return []
-
+        return ""
 # Function to summarize an article using Gemini API
 def summarize_article(article_url, gemini_api_key):
     try:
