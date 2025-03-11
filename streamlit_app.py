@@ -5,8 +5,18 @@ from urllib.parse import urlparse, urljoin
 from bs4 import BeautifulSoup
 
 # Function to extract URLs from a webpage
+def validate_url(webpage_url):
+    """ Memastikan URL memiliki skema yang benar (https://) """
+    parsed_url = urlparse(webpage_url)
+    if not parsed_url.scheme:  # Jika tidak ada skema (http/https)
+        return f"https://{webpage_url}"  # Menambahkan https:// secara otomatis
+    return webpage_url
+
 def extract_urls(webpage_url):
     try:
+        # Memastikan URL valid dan lengkap
+        webpage_url = validate_url(webpage_url)
+        
         # Mengambil konten halaman
         response = requests.get(webpage_url)
         response.raise_for_status()  # Menyebabkan error jika status kode tidak 200
@@ -20,6 +30,7 @@ def extract_urls(webpage_url):
             paragraphs = [p.get_text() for p in article.find_all('p')]
             return [p.strip() for p in paragraphs if p.strip()]
         else:
+            print("Tidak ditemukan tag <article> pada halaman.")
             return []
 
     except requests.exceptions.RequestException as e:
