@@ -76,7 +76,7 @@ gemini_api_key = st.text_input('Enter your Gemini API key:', type='password')
 if webpage_url and not validators.url(webpage_url):
     st.error("The entered URL is not valid.")
 
-if st.button(Ringkasan'):
+if st.button('Ringkasan'):
     if webpage_url and gemini_api_key:
         urls = extract_urls(webpage_url)
         if urls:  # Jika ada URL yang diekstrak
