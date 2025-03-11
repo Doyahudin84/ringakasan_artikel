@@ -7,31 +7,24 @@ from bs4 import BeautifulSoup
 # Function to extract URLs from a webpage
 def extract_urls(webpage_url):
     try:
-        response = requests.get(webpage_url, verify=False)
-        response.raise_for_status()  # Memastikan response tidak error (status code bukan 200)
+        # Mengambil konten halaman
+        response = requests.get(webpage_url)
+        response.raise_for_status()  # Menyebabkan error jika status kode tidak 200
+
+        # Mem-parsing HTML dengan BeautifulSoup
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        # Mencari artikel di dalam tag <article>
+        article = soup.find('article')
+        if article:
+            paragraphs = [p.get_text() for p in article.find_all('p')]
+            return [p.strip() for p in paragraphs if p.strip()]
+        else:
+            return []
+
     except requests.exceptions.RequestException as e:
-        st.error(f"An error occurred while fetching the webpage: {e}")
+        print(f"Error saat mengambil halaman: {e}")
         return []
-    
-    soup = BeautifulSoup(response.text, 'html.parser')
-    urls = []
-
-    for a in soup.find_all('a', href=True):
-        href = a['href']
-        
-        # Mengabaikan URL mailto atau URL fragment (yang hanya '#')
-        if href.startswith('mailto:') or href.startswith('#'):
-            continue
-        
-        # Menambahkan skema dan domain jika URL relatif
-        if not href.startswith('http') and not href.startswith('www'):
-            href = urljoin(webpage_url, href)
-
-        # Memastikan URL valid
-        if validators.url(href):
-            urls.append(href)
-    
-    return urls
 
 # Function to summarize an article using Gemini API
 def summarize_article(article_url, gemini_api_key):
