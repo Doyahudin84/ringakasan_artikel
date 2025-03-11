@@ -1,5 +1,4 @@
 requests
-gemini
 streamlit
 validators
 beautifulsoup4
