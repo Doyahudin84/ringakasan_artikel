@@ -1,7 +1,7 @@
 import requests
-import gemini
 import streamlit as st
-import validators  # Menambahkan library untuk validasi URL
+import validators
+from bs4 import BeautifulSoup
 
 # Function to extract URLs from a webpage
 def extract_urls(webpage_url):
@@ -16,12 +16,7 @@ def extract_urls(webpage_url):
     urls = [a['href'] for a in soup.find_all('a', href=True)]
     return urls
 
-# Function to get Gemini API key
-def get_gemini_api_key():
-    # Menggunakan API key langsung yang sudah diberikan
-    return "AIzaSyDo9PAENFAZztMgYW7gzGO04HDsOS01_8M"
-
-# Function to summarize an article using Gemini
+# Function to summarize an article using Gemini API
 def summarize_article(article_url, gemini_api_key):
     try:
         response = requests.get(article_url)
@@ -31,17 +26,26 @@ def summarize_article(article_url, gemini_api_key):
         st.error(f"Error fetching article at {article_url}: {e}")
         return None
 
-    gemini.api_key = gemini_api_key  # Menggunakan API key yang telah dimasukkan
+    # Menggunakan API Gemini untuk menghasilkan konten
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={gemini_api_key}"
+    headers = {
+        'Content-Type': 'application/json',
+    }
     
+    data = {
+        "contents": [{
+            "parts": [{"text": article_text}]
+        }]
+    }
+
     try:
-        response = gemini.Completion.create(
-            engine="text-davinci-003",  # Pastikan engine yang digunakan adalah yang benar
-            prompt=f"Summarize the following article:\n\n{article_text}",
-            max_tokens=150
-        )
-        summary = response.choices[0].text.strip()
+        # Kirim permintaan POST ke API Gemini
+        response = requests.post(url, json=data, headers=headers)
+        response.raise_for_status()  # Memastikan tidak ada error pada permintaan
+        result = response.json()
+        summary = result.get('content', 'No summary generated.')
         return summary
-    except Exception as e:
+    except requests.exceptions.RequestException as e:
         st.error(f"Error during summary generation: {e}")
         return None
 
@@ -49,12 +53,11 @@ def summarize_article(article_url, gemini_api_key):
 st.title('URL Extractor and Article Summarizer')
 
 webpage_url = st.text_input('Enter the webpage URL:')
+gemini_api_key = st.text_input('Enter your Gemini API key:', type='password')
 
 # Validasi URL
 if webpage_url and not validators.url(webpage_url):
     st.error("The entered URL is not valid.")
-
-gemini_api_key = get_gemini_api_key()  # Mengambil API key dari fungsi
 
 if st.button('Extract and Summarize'):
     if webpage_url and gemini_api_key:
