@@ -1,5 +1,5 @@
 import requests
-import streamlit
+import streamlit as st
 import validators
 from bs4 import BeautifulSoup
 
